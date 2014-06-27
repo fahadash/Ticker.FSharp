@@ -61,7 +61,7 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Ticker.FSharp\Ticker.FSharp.fsproj">
+    <ProjectReference Include="..\Ticker\Ticker.FSharp.fsproj">
       <Project>{d7c1a8f4-2063-47ad-9a2c-ae2dad17e7ea}</Project>
       <Name>Ticker.FSharp</Name>
     </ProjectReference>
