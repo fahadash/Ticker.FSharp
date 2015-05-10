@@ -6,7 +6,7 @@ let main argv =
     let machine = DataMachine()
     let initial_received = ref false
 
-    let ticks = machine.GetLiveGoogleApiTicks("AAPL")
+    let ticks = machine.TestTicks("AAPL")
 
     let received(tick : Tick) =
         if not !initial_received then

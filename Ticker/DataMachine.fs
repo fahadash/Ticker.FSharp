@@ -51,3 +51,7 @@ type DataMachine() =
         let trimmed =  strings.Select (fun (l:string) -> l.Substring(l.IndexOf("[") + 1, l.LastIndexOf("]") - 2 - l.IndexOf("[") + 1))
         //Parse into object and return the IObservable<Tick>
         trimmed.Select(fun (l:string) -> JsonConvert.DeserializeObject<Tick>(l)).DistinctUntilChanged(fun (a:Tick) -> a.Price)
+
+    member this.TestTicks(symbol : string) =
+        let random = Random()
+        Observable.Interval(TimeSpan.FromSeconds(2.0)).Select(fun i -> Tick(Symbol=symbol, Price=random.NextDouble(), LastUpdated=DateTime.Now))
