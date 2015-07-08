@@ -5,15 +5,16 @@ using System.Web;
 
 namespace SignalR.Ticker.FSharp.Ticker
 {
-    using System.Reactive.Concurrency;
-    using System.Reactive.Linq;
+	using System.Diagnostics;
+	using System.Reactive.Concurrency;
+	using System.Reactive.Linq;
 
-    using global::Ticker.FSharp;
+	using global::Ticker.FSharp;
 
-    using Microsoft.AspNet.SignalR;
-    using Microsoft.AspNet.SignalR.Hubs;
+	using Microsoft.AspNet.SignalR;
+	using Microsoft.AspNet.SignalR.Hubs;
 
-    public class TickWithIndicator
+	public class TickWithIndicator
     {
         public Tick Tick { get; set; }
         public bool Up { get; set; }
@@ -22,24 +23,30 @@ namespace SignalR.Ticker.FSharp.Ticker
     [HubName("tickerFsharp")]
     public class TickerFSharpHub : Hub
     {
+		public TickerFSharpHub()
+		{
 
+		}
         private static IDisposable subscription = null;
 
-        [HubMethodName("startTicker")]
+		[HubMethodName("startTicker")]
         public void StartTicker()
         {
+			var machine = new DataMachine();
             if (subscription == null)
             {
-                var machine = new DataMachine();
-                var aapl = this.AddIndicator(machine.GetLiveGoogleApiTicks("AAPL"));
-                var goog = this.AddIndicator(machine.GetLiveGoogleApiTicks("GOOG"));
-                var msft = this.AddIndicator(machine.GetLiveGoogleApiTicks("MSFT"));
+				var aggregate =
+				machine.GetLiveGoogleApiTicks("AAPL")
+				.Merge(machine.GetLiveGoogleApiTicks("GOOG"))
+				.Merge(machine.GetLiveGoogleApiTicks("MSFT"))
+				.Publish()
+				.RefCount();
 
-
-                subscription = aapl
-                    .Merge(msft)
-                    .Merge(goog)
-                    .Subscribe(
+				
+				var observable = this.AddIndicator(aggregate);
+                subscription =
+					observable
+					.Subscribe(
                     t =>
                         {
                             this.Tick(t.Tick.Symbol, t.Tick.Price, t.Tick.LastUpdated.ToString(), t.Up);
@@ -54,7 +61,7 @@ namespace SignalR.Ticker.FSharp.Ticker
 
         IObservable<TickWithIndicator> AddIndicator(IObservable<Tick> ticker)
         {
-            return ticker.FirstAsync().Concat(ticker.Skip(1))
+            return ticker
                     .Select(t => new TickWithIndicator()
                     {
                         Tick = t,
